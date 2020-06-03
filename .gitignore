@@ -1,0 +1,11 @@
+.aliases
+target
+var_test_run
+venv
+
+**/.DS_Store
+**/.directory
+**/*.apk
+**/__pycache__/**
+**/.idea/**
+**/*.pyc

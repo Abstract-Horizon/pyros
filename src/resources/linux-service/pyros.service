@@ -1,0 +1,18 @@
+[Unit]
+Description=PyROS daemon service
+Wants=network-online.target
+After=rsyslog.service
+After=network-online.target
+
+[Service]
+Restart=no
+ExecStart=/usr/local/bin/pyros daemon
+ExecStop=/bin/kill -INT $MAINPID
+TimeoutStopSec=10s
+User={USER}
+WorkingDirectory={HOME}
+StandardOutput=syslog
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target
