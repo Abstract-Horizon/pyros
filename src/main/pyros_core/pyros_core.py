@@ -216,7 +216,7 @@ class PyrosDaemon:
         def _line(t):
             return t[0] + "=" + t[1]
 
-        service_file = os.path.join(self.process_dir(process_id) + ".process")
+        service_file = os.path.join(self.process_dir(process_id), ".process")
 
         lines = "\n".join(list(map(_line, list(properties.items())))) + "\n"
         with open(service_file, 'wt') as f:
@@ -469,7 +469,7 @@ class PyrosDaemon:
     def store_extra_code(self, process_id, name, payload):
         self.make_process_dir(process_id)
     
-        filename = self.process_dir(process_id) + "/" + name
+        filename = os.path.join(self.process_dir(process_id), name)
     
         filedir = os.path.dirname(filename)
         print("  making file dir " + str(filedir))

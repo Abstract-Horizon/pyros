@@ -2,7 +2,7 @@
 target
 var_test_run
 venv
-
+t
 **/.DS_Store
 **/.directory
 **/*.apk
