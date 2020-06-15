@@ -1,6 +1,6 @@
 import pyroslib
 
-host, port = pyroslib.getConnectionDetails()
+host, port = pyroslib.get_connection_details()
 
 print(f"DISCOVERY-PYROS: running pyros on MQTT server {host}:{port}")
 

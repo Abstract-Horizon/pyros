@@ -22,7 +22,7 @@ CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
 
 SOURCE_PATHS = [join(CURRENT_PATH, "src/main"), join(CURRENT_PATH, "src/resources")]
 RESULT_NAME = "pyros"
-MAIN_FILE = "pyros"  # discovery.py
+MAIN_FILE = "pyros_main"  # discovery.py
 
 REQUIREMENTS_FILE = join(CURRENT_PATH, "requirements.txt")
 

@@ -1,2 +1,5 @@
 paho-mqtt
-local_resources
+local-resources
+pyros-client
+pyros-discovery
+pyros-storage

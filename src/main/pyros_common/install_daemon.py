@@ -12,6 +12,7 @@
 
 
 import os
+import re
 
 from pyros_common.utils import ensure_dir
 from local_resources import Resource
@@ -24,24 +25,35 @@ class InstallDaemon:
         self.group = group
         self.force = force
 
-    def _copy_recursively(self, resource, resource_path, dest_path):
+    def _copy_recursively(self, resource, resource_path, dest_path, excludes=None, overwrite_dir_contents=False):
+
+        def in_exclude(path, _excludes):
+            for pattern in _excludes:
+                if pattern.match(path):
+                    return True
+            return False
+
+        exclude_patterns = [re.compile(e.replace("**", "(.*)").replace("*", "([^/]*)")) for e in (excludes if excludes is not None else [])]
         for file in resource.list():
             if file.endswith("/"):
                 new_resource_path = os.path.join(resource_path, file[:-1])
-                if not ensure_dir(dest_path, self.user, self.group, file[:-1], verbose=False):
-                    self._copy_recursively(Resource(new_resource_path), os.path.join(resource_path, file), os.path.join(dest_path, file[:-1]))
+                if excludes is None or not in_exclude(new_resource_path,  exclude_patterns):
+                    if not ensure_dir(dest_path, self.user, self.group, file[:-1], verbose=False) or overwrite_dir_contents:
+                        self._copy_recursively(Resource(new_resource_path), os.path.join(resource_path, file), os.path.join(dest_path, file[:-1]), excludes=excludes, overwrite_dir_contents=overwrite_dir_contents)
             else:
-                with Resource(os.path.join(resource_path, file)) as r:
-                    result_file = os.path.join(dest_path, file)
-                    with open(result_file, 'wb') as out_file:
-                        out_file.write(r.read())
-                os.system("chown " + self.user + ":" + self.group + " " + result_file)
+                new_resource_path = os.path.join(resource_path, file)
+                if excludes is None or not in_exclude(new_resource_path,  exclude_patterns):
+                    with Resource(new_resource_path) as r:
+                        result_file = os.path.join(dest_path, file)
+                        with open(result_file, 'wb') as out_file:
+                            out_file.write(r.read())
+                    os.system("chown " + self.user + ":" + self.group + " " + result_file)
 
     def _copy_existing_python_packages(self, code_dir, package_names):
         for package_name in package_names:
             print(f"Installing default package {package_name}")
             ensure_dir(code_dir, self.user, self.group, package_name, verbose=False)
-            self._copy_recursively(Resource(package_name), package_name, os.path.join(code_dir, package_name))
+            self._copy_recursively(Resource(package_name), package_name, os.path.join(code_dir, package_name), excludes=["**/__pycache__"])
 
     def install(self):
         if not os.path.exists(self.home_dir):
@@ -53,8 +65,8 @@ class InstallDaemon:
             ensure_dir(self.home_dir, self.user, self.group, "logs", verbose=True)
             if not ensure_dir(self.home_dir, self.user, self.group, "code", verbose=True) or self.force:
                 code_dir = os.path.join(self.home_dir, "code")
-                self._copy_recursively(Resource("pyros"), "pyros", code_dir)
-                self._copy_existing_python_packages(code_dir, ["paho", "local_resources"])
+                self._copy_existing_python_packages(code_dir, ["paho", "local_resources", "discovery", "pyroslib", "storage"])
+                self._copy_recursively(Resource("pyros-code"), "pyros-code", code_dir, overwrite_dir_contents=True, excludes=["**/__pycache__"])
 
             config_file = os.path.join(self.home_dir, "pyros.config")
             if not os.path.exists(config_file):
