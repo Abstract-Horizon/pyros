@@ -10,4 +10,5 @@
 #
 #################################################################################
 
-from storage_service.storage_service_main import *
+from storage.storage_main import *
+from storage.storagelib import *

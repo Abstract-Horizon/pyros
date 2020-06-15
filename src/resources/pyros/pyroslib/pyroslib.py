@@ -41,16 +41,16 @@ def doNothing():
     pass
 
 
-_processId = "unknown"
-_onConnected = doNothing
-_onStop = doNothing
+_process_id = "unknown"
+_on_connected = doNothing
+_on_stop = doNothing
 _connected = False
 
 _subscribers = []
 _regexTextToLambda = {}
 _regexBinaryToLambda = {}
 
-_collectStats = False
+_collect_stats = False
 
 _stats = [[0, 0, 0]]
 _received = False
@@ -90,7 +90,7 @@ def getConnectionDetails():
 def publish(topic, message):
     if _connected:
         client.publish(topic, message)
-        if _collectStats:
+        if _collect_stats:
             _addSendMessage()
 
 
@@ -163,11 +163,11 @@ def _sendStats():
     for stat in _stats:
         msg = msg + str(stat[0]) + "," + str(stat[1]) + "," + str(stat[2]) + "\n"
 
-    publish("exec/" + _processId + "/stats/out", msg)
+    publish("exec/" + _process_id + "/stats/out", msg)
 
 
 def _handleStats(topic, payload, groups):
-    global _collectStats
+    global _collect_stats
 
     if "start" == payload:
         _collectStats = True
@@ -179,16 +179,16 @@ def _handleStats(topic, payload, groups):
 
 def _handleSystem(topic, payload, groups):
     def waitForProcessStop():
-        print("Confirming stop for service " + _processId)
-        publish("exec/" + _processId + "/system/stop", "stopped")
+        print("Confirming stop for service " + _process_id)
+        publish("exec/" + _process_id + "/system/stop", "stopped")
         client.loop(0.001)
-        if _onStop is not None:
-            print("Invoking stop callback for service " + _processId)
-            _onStop()
+        if _on_stop is not None:
+            print("Invoking stop callback for service " + _process_id)
+            _on_stop()
 
         loop(0.5)
 
-        print("Stopping service " + _processId)
+        print("Stopping service " + _process_id)
         os._exit(0)
 
     if payload.strip() == "stop":
@@ -206,8 +206,8 @@ def _onConnect(mqttClient, data, flags, rc):
         _connected = True
         for subscriber in _subscribers:
             mqttClient.subscribe(subscriber, 0)
-        if _onConnected is not None:
-            _onConnected()
+        if _on_connected is not None:
+            _on_connected()
 
     else:
         print("ERROR: Connection returned error result: " + str(rc))
@@ -221,7 +221,7 @@ def _onMessage(mqttClient, data, msg):
 
     topic = msg.topic
 
-    if _collectStats:
+    if _collect_stats:
         _addReceivedMessage()
 
     try:
@@ -295,7 +295,7 @@ def onDisconnect(mqttClient, data, rc):
 
 
 def init(name, unique=False, onConnected=None, onStop=None, waitToConnect=True, host='localhost', port=1883):
-    global client, _connected, _onConnected, _onStop, _name, _processId, _host, _port, _loop_sleep, _client_loop
+    global client, _connected, _on_connected, _on_stop, _name, _process_id, _host, _port, _loop_sleep, _client_loop
 
     _onConnected = onConnected
     _onStop = onStop
@@ -411,7 +411,7 @@ def forever(deltaTime, outer=None, inner=None, loop_sleep=None, priority=PRIORIT
     nextTime = currentTime
 
     while True:
-        if _collectStats:
+        if _collect_stats:
             _stats.append([nextTime, 0, 0])
             if len(_stats) > 100:
                 del _stats[0]
