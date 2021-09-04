@@ -25,7 +25,7 @@ class PyrosUpload(CommonCommand):
         self.parser.add_argument("-x", "--exec", help="sets executable to be used to start program. If omitted 'python3' is used by default.")
         self.parser.add_argument("-f", "--tail", action="store_true", default=False, help="'tail' messages out of process.")
         self.parser.add_argument("process_id", help="id process is going to be known from this point on.")
-        self.parser.add_argument("file", help="main file name to be uploaded.")
+        self.parser.add_argument("file", nargs='?', help="main file name to be uploaded.")
         group = self.parser.add_argument_group()
         group.add_argument("-e", "--extra", nargs=argparse.ZERO_OR_MORE, help="extra files to be uploaded along with the main file.")
 
@@ -63,17 +63,18 @@ class PyrosUpload(CommonCommand):
 
         self.pyros_client = client
 
-        with open(self.filename) as file:
-            file_content = file.read()
+        if self.filename is not None:
+            with open(self.filename) as file:
+                file_content = file.read()
 
-        client.publish("exec/" + self.process_id + "/process", file_content)
+            client.publish("exec/" + self.process_id + "/process", file_content)
 
-        if self.service:
-            client.publish("exec/" + self.process_id, "make-service")
-            client.publish("exec/" + self.process_id, "enable-service")
+            if self.service:
+                client.publish("exec/" + self.process_id, "make-service")
+                client.publish("exec/" + self.process_id, "enable-service")
 
-        if self.executable is not None:
-            client.publish("exec/" + self.process_id, "set-executable " + self.executable)
+            if self.executable is not None:
+                client.publish("exec/" + self.process_id, "set-executable " + self.executable)
 
         for extra_file in self.extra_files:
             if os.path.isdir(extra_file):

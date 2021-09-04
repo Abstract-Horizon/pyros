@@ -479,8 +479,8 @@ class PyrosDaemon:
 
         # noinspection PyBroadException
         try:
-            with open(filename, "wb") as textFile:
-                textFile.write(payload)
+            with open(filename, "wb") as file:
+                file.write(payload)
     
             self.output_status(process_id, "stored " + self._sanitise_filename(process_id, filename))
         except Exception:
