@@ -138,7 +138,7 @@ class PyrosDaemon:
                     self.important(f"ERROR: self.port must be a number. '{host_port[1]}' is not a number.")
                     sys.exit(1)
             else:
-                self.host = host_port
+                self.host = host_port[0]
 
         if 'PYROS_MQTT' in os.environ:
             host_str = os.environ['PYROS_MQTT']
@@ -505,8 +505,12 @@ class PyrosDaemon:
                 self.info("Tried to kill " + process_id_to_kill + " but got result " + str(res) + "; command: " + str(cmd_and_args))
             if restart:
                 start_it_again(process_id_to_kill)
-    
+
         def wait_for_process_stop(process_id_stop):
+            def kill_process(process):
+                process.kill()
+                os.system(f"kill -9 {process.pid}")
+
             _now = time.time()
             while time.time() - _now < self.thread_kill_timeout and 'stop_response' not in self.processes[process_id_stop]:
                 time.sleep(0.05)
@@ -517,16 +521,16 @@ class PyrosDaemon:
                 while time.time() - _now < self.thread_kill_timeout and _process.returncode is None:
                     time.sleep(0.05)
                 if _process.returncode is None:
-                    _process.kill()
-                    self.info("PyROS: responded with stopping but didn't stop. Killed now " + self.get_process_type_name(process_id_stop))
-                    self.output(process_id_stop, "PyROS: responded with stopping but didn't stop. Killed now " + self.get_process_type_name(process_id_stop))
+                    kill_process(_process)
+                    self.info(f"PyROS: responded with stopping but didn't stop. Killed now {self.get_process_type_name(process_id_stop)}; pid={_process.pid}")
+                    self.output(process_id_stop, "PyROS: responded with stopping but didn't stop. Killed now {self.get_process_type_name(process_id_stop)}; pid={_process.pid}")
                 else:
-                    self.info("PyROS: stopped " + self.get_process_type_name(process_id_stop))
-                    self.output(process_id_stop, "PyROS: stopped " + self.get_process_type_name(process_id_stop))
+                    self.info(f"PyROS: stopped {self.get_process_type_name(process_id_stop)}")
+                    self.output(process_id_stop, f"PyROS: stopped {self.get_process_type_name(process_id_stop)}")
             else:
-                _process.kill()
-                self.info("PyROS: didn't respond so killed " + self.get_process_type_name(process_id_stop))
-                self.output(process_id_stop, "PyROS: didn't respond so killed " + self.get_process_type_name(process_id_stop))
+                kill_process(_process)
+                self.info(f"PyROS: didn't respond so killed {self.get_process_type_name(process_id_stop)}; pid={_process.pid}")
+                self.output(process_id_stop, f"PyROS: didn't respond so killed {self.get_process_type_name(process_id_stop)}; pid={_process.pid}")
     
             final_process_kill(process_id_stop)
     
@@ -548,7 +552,7 @@ class PyrosDaemon:
         else:
             self.info("PyROS ERROR: process " + process_id + " does not exist.")
             self.output(process_id, "PyROS ERROR: process " + process_id + " does not exist.")
-            final_process_kill(process_id)
+            # final_process_kill(process_id)
             if restart:
                 start_it_again(process_id)
 
