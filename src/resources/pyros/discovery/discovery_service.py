@@ -48,7 +48,7 @@ class Discovery:
                             exec(compile(code, "DISCOVERY.py", 'exec'), _globals)
                             print(f"Done '{discovery_filename}'.")
                         except Exception as e:
-                            print(f"WARNING: while processing '{discovery_filename}': {ex}\n{''.join(traceback.format_tb(ex.__traceback__))}")
+                            print(f"WARNING: while processing '{discovery_filename}': {e}\n{''.join(traceback.format_tb(e.__traceback__))}")
                 except FileNotFoundError:
                     pass
 

@@ -63,6 +63,7 @@ class InstallDaemon:
             print(f"Will use user '{self.user}' to run daemon.")
 
             ensure_dir(self.home_dir, self.user, self.group, "logs", verbose=True)
+            ensure_dir(self.home_dir, self.user, self.group, "data", verbose=True)
             if not ensure_dir(self.home_dir, self.user, self.group, "code", verbose=True) or self.force:
                 code_dir = os.path.join(self.home_dir, "code")
                 self._copy_existing_python_packages(code_dir, ["paho", "local_resources", "discovery", "pyroslib", "storage"])

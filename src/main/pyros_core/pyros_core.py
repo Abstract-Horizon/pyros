@@ -46,6 +46,8 @@ class PyrosDaemon:
         self.agents_kill_timeout = DEFAULT_AGENT_KILL_TIMEOT
         self.debug_level = DEFAULT_DEBUG_LEVEL
         self.code_dir_name = "code"
+        self.data_dir_name = "data"
+        self.logs_dir_name = "logs"
         self.host = "localhost"
         self.port = 1883
         self.timeout = DEFAULT_TIMEOUT
@@ -92,6 +94,11 @@ class PyrosDaemon:
                     print(f"  error: cannot convert '{property_name}' to float; got '{cfg[property_name]}'")
             return default
 
+        def ensure_dir(dir_name):
+            path = os.path.join(self.home_dir, dir_name)
+            if not os.path.exists(path):
+                os.mkdir(path)
+
         parser = argparse.ArgumentParser(description='Pyros core daemon.', prog=name)
         parser.add_argument("-v", "--verbose", action='store_true', default=False, help="set debuging level to verbose")
         parser.add_argument("-vv", "--verbose-more", action='store_true', default=False, help="set debuging level to even more verbose")
@@ -112,6 +119,10 @@ class PyrosDaemon:
             config = {kv[0].strip(): kv[1].strip()
                       for kv in [line.split("=") for line in [line.replace('\n', '') for line in config_file.readlines()]]
                       if len(kv) == 2 and not kv[0].lstrip().startswith('#')}
+
+        ensure_dir(self.code_dir_name)
+        ensure_dir(self.logs_dir_name)
+        ensure_dir(self.data_dir_name)
 
         self.debug_level = read_config_int(config, 'debug.level', self.debug_level)
 
@@ -193,9 +204,6 @@ class PyrosDaemon:
         return process_config_filename
 
     def make_process_dir(self, process_id: str) -> None:
-        if not os.path.exists(self.code_dir_name):
-            os.mkdir(self.code_dir_name)
-
         if not os.path.exists(self.process_dir(process_id)):
             os.mkdir(self.process_dir(process_id))
 
@@ -317,12 +325,16 @@ class PyrosDaemon:
             self.debug("Starting " + filename + " at dir " + subprocess_dir)
     
             new_env = os.environ.copy()
+            code_dir = os.path.join(self.home_dir, self.code_dir_name)
             if "PYTHONPATH" in new_env:
-                new_env["PYTHONPATH"] = new_env["PYTHONPATH"] + ":" + os.path.join(self.home_dir, "code")
+                new_env["PYTHONPATH"] = new_env["PYTHONPATH"] + ":" + code_dir
             else:
-                new_env["PYTHONPATH"] = os.path.join(self.home_dir, "code")
+                new_env["PYTHONPATH"] = code_dir
 
             new_env["PYROS_MQTT"] = self.host + ":" + str(self.port)
+            new_env["PYROS_CODE"] = code_dir
+            new_env["PYROS_LOGS"] = os.path.join(self.home_dir, self.logs_dir_name)
+            new_env["PYROS_DATA"] = os.path.join(self.home_dir, self.data_dir_name)
             process_def = self.processes[process_id]
     
             if "exec" in process_def:
@@ -907,8 +919,6 @@ class PyrosDaemon:
             self.important("ERROR: Got exception on message; " + str(exception) + "\n" + ''.join(traceback.format_tb(exception.__traceback__)))
 
     def startup_services(self):
-        if not os.path.exists(self.code_dir_name):
-            os.mkdir(self.code_dir_name)
         programs_dirs = os.listdir(self.code_dir_name)
         for program_dir in programs_dirs:
             if os.path.isdir(self.process_dir(program_dir)):
