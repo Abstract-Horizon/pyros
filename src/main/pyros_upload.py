@@ -45,13 +45,17 @@ class PyrosUpload(CommonCommand):
 
     def execute_command(self, client):
         def send_file(dest_path, filename):
+            if self.verbose_level >= 1:
+                print(f"Sending file '{filename}' to '{dest_path}'")
             with open(filename, "rb") as f:
                 content = f.read()
 
                 extra_name = os.path.join(dest_path, os.path.split(filename)[1])
                 self.files.append(extra_name)
 
-                client.publish("exec/" + self.process_id + "/process/" + extra_name, content)
+                if self.verbose_level >= 2:
+                    print(f"Sending file content to exec/{self.process_id}/process/{extra_name}, content len {len(content)}")
+                client.publish(f"exec/{self.process_id}/process/{extra_name}", content)
 
         def process_dir(dest_path, dir_path):
             for f in os.listdir(dir_path):
@@ -67,22 +71,30 @@ class PyrosUpload(CommonCommand):
             with open(self.filename) as file:
                 file_content = file.read()
 
-            client.publish("exec/" + self.process_id + "/process", file_content)
+            if self.verbose_level >= 2:
+                print(f"Sending file content to exec/{self.process_id}/process")
+            client.publish(f"exec/{self.process_id}/process", file_content)
 
             if self.service:
-                client.publish("exec/" + self.process_id, "make-service")
-                client.publish("exec/" + self.process_id, "enable-service")
+                if self.verbose_level >= 2:
+                    print(f"Sending exec/{self.process_id}, make-service")
+                    print(f"Sending exec/{self.process_id}, make-service")
+                client.publish(f"exec/{self.process_id}", "enable-service")
+                client.publish(f"exec/{self.process_id}", "enable-service")
 
             if self.executable is not None:
-                client.publish("exec/" + self.process_id, "set-executable " + self.executable)
+                if self.verbose_level >= 2:
+                    print(f"Sending exec/{self.process_id}, set-executable")
+                client.publish(f"exec/{self.process_id}", f"set-executable {self.executable}")
 
-        for extra_file in self.extra_files:
-            if os.path.isdir(extra_file):
-                process_dir(os.path.split(extra_file)[1], extra_file)
-            else:
-                send_file("", extra_file)
+        if self.extra_files is not None:
+            for extra_file in self.extra_files:
+                if os.path.isdir(extra_file):
+                    process_dir(os.path.split(extra_file)[1], extra_file)
+                else:
+                    send_file("", extra_file)
 
-        return True
+        return False
 
     def process_out(self, line, _pid):
         if line.endswith("\n"):
@@ -100,7 +112,9 @@ class PyrosUpload(CommonCommand):
                 del self.files[i]
                 if len(self.files) == 0:
                     if self.restart:
-                        self.pyros_client.publish("exec/" + self.process_id, "restart")
+                        if self.verbose_level >= 2:
+                            print(f"Sending exec/{self.process_id}, set-restart")
+                        self.pyros_client.publish("exec/{self.process_id}", "restart")
                     else:
                         return False
         elif self.restart and line.startswith("PyROS: started"):

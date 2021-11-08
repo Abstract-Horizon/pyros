@@ -90,6 +90,7 @@ class CommonCommand:
         # self.parser.add_argument('--help', '-h', type=bool, default=False, help='shows this help')
         if remote_command:
             self.parser.add_argument('--timeout', '-t', type=int, default=42, help='timeout')
+            self.parser.add_argument('--verbose', '-v', help='verbose', action='count', default=0)
             self.parser.add_argument('destination', type=str, help='destination')
 
         # self.parser.add_argument('command', type=str, help='pyros command')
@@ -105,6 +106,8 @@ class CommonCommand:
         self.countdown = None
         self.after_command = False
 
+        self.verbose_level = 0
+
         self.executable = sys.argv[0]
 
     def get_timeout(self):
@@ -115,6 +118,8 @@ class CommonCommand:
 
     def process_common_args_for_remote_command(self):
         args = self.parser.parse_args(sys.argv[1:])
+
+        self.verbose_level = args.verbose
 
         destination = args.destination
 
@@ -204,7 +209,8 @@ class CommonCommand:
                     self.client.loop(0.005)
                 self.countdown -= 1
                 if self.countdown == 0:
-                    print("ERROR: reached timeout waiting for response")
+                    if self.verbose_level >= 2:
+                        print("ERROR: reached timeout waiting for response")
                     sys.exit(1)
                 elif self.countdown < 0:
                     self.countdown = 0
@@ -280,7 +286,8 @@ class CommonCommand:
                     self.client.loop(0.005)
                 self.countdown -= 1
                 if self.countdown == 0:
-                    print("ERROR: reached timeout waiting for response")
+                    if self.verbose_level >= 2:
+                        print("ERROR: reached timeout waiting for response")
                     sys.exit(1)
                 elif self.countdown < 0:
                     self.countdown = 0
@@ -359,7 +366,8 @@ class CommonCommand:
                     self.client.loop(0.005)
                 self.countdown -= 1
                 if self.countdown == 0:
-                    print("ERROR: reached timeout waiting for response")
+                    if self.verbose_level >= 2:
+                        print("ERROR: reached timeout waiting for response")
                     sys.exit(1)
                 elif self.countdown < 0:
                     self.countdown = 0
