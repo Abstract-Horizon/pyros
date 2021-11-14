@@ -13,6 +13,7 @@
 
 import argparse
 import os
+import time
 
 from pyros_common import CommonCommand
 
@@ -56,6 +57,7 @@ class PyrosUpload(CommonCommand):
                 if self.verbose_level >= 2:
                     print(f"Sending file content to exec/{self.process_id}/process/{extra_name}, content len {len(content)}")
                 client.publish(f"exec/{self.process_id}/process/{extra_name}", content)
+                time.sleep(0.1)
 
         def process_dir(dest_path, dir_path):
             for f in os.listdir(dir_path):
@@ -74,18 +76,22 @@ class PyrosUpload(CommonCommand):
             if self.verbose_level >= 2:
                 print(f"Sending file content to exec/{self.process_id}/process")
             client.publish(f"exec/{self.process_id}/process", file_content)
+            time.sleep(0.1)
 
             if self.service:
                 if self.verbose_level >= 2:
                     print(f"Sending exec/{self.process_id}, make-service")
                     print(f"Sending exec/{self.process_id}, make-service")
                 client.publish(f"exec/{self.process_id}", "enable-service")
+                time.sleep(0.1)
                 client.publish(f"exec/{self.process_id}", "enable-service")
+                time.sleep(0.1)
 
             if self.executable is not None:
                 if self.verbose_level >= 2:
                     print(f"Sending exec/{self.process_id}, set-executable")
                 client.publish(f"exec/{self.process_id}", f"set-executable {self.executable}")
+                time.sleep(0.1)
 
         if self.extra_files is not None:
             for extra_file in self.extra_files:
