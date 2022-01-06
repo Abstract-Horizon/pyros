@@ -1,9 +1,13 @@
 #!/bin/bash
 
-mkdir pyros
+
+mkdir -p pyros
 cd pyros
 
-git checkout https://github.com/Abstract-Horizon/pyros.git .
+git clone https://github.com/Abstract-Horizon/pyros.git .
+
+python -m venv venv
+. venv/bin/activate
 
 ./package-pyros.py
 
