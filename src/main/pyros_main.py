@@ -39,7 +39,8 @@ class StartingPyrosCommand:
         self.local_commands = ["alias", "daemon", "discover", "help", "install"]
         self.commandAlias = {
             "kill": "stop",
-            "rm": "remove"
+            "rm": "remove",
+            "log": "logs"
         }
 
         self.host = 'localhost'

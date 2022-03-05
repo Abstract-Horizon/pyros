@@ -1,5 +1,5 @@
 paho-mqtt==1.6.1
 local-resources==1.0.2
 pyros-client==1.0.1
-pyros-discovery==1.1
+pyros-discovery==1.1.1
 pyros-storage==1.1.0

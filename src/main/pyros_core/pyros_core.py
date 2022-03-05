@@ -136,7 +136,7 @@ class PyrosDaemon:
         self.timeout = read_config_int(config, 'mqtt.timeout', parsed_args.timeout)
 
         self.host = read_config_str(config, 'mqtt.host', self.host)
-        self.port = read_config_str(config, 'mqtt.port', self.port)
+        self.port = read_config_int(config, 'mqtt.port', self.port)
 
         if parsed_args.host_port is not None:
             host_port = parsed_args.host_port.split(':')
@@ -170,7 +170,7 @@ class PyrosDaemon:
 
         self.max_reconnect_retries = read_config_int(config, 'mqtt.max_reconnect_retries', self.max_reconnect_retries)
 
-        self.this_cluster_id = read_config_int(config, 'cluster_id', self.this_cluster_id)
+        self.this_cluster_id = read_config_str(config, 'cluster_id', self.this_cluster_id)
 
         if 'PYROS_CLUSTER_ID' in os.environ:
             self.this_cluster_id = os.environ['PYROS_CLUSTER_ID']
@@ -953,7 +953,8 @@ class PyrosDaemon:
             _try_lasted = 0
             _now = time.time()
             try:
-                self.important("    Connecting to " + str(self.host) + ":" + str(self.port) + " (self.timeout " + str(self.timeout) + ").")
+
+                self.important(f"    Connecting to {self.host}:{self.port} (timeout {self.timeout}).")
                 _now = time.time()
                 self.client.connect(self.host, self.port, self.timeout)
                 _connected_successfully = True
