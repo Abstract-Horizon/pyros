@@ -11,21 +11,10 @@ test = false
 bench = false
 path = "src/rust/deamon.rs"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 
-#ring = { version = "0.16.20" }
-
-#ring = "0.16.19"
-
 clap = "2"
-crossbeam-channel = "^0.3"
-#rumqtt = "0.31.0"
 
-#rumqtt = { git = "https://github.com/AtherEnergy/rumqtt.git", branch = "master" }
-#rumqttc = { git = "https://github.com/eutampieri/rumqtt.git", branch = "master" }
+tokio = { version = "1", features = ["rt", "macros", "signal", "sync"] }
 rumqttc = "0.13.0"
-
-mqtt311 = "0.2.0"
-ctrlc = "3.1.4"

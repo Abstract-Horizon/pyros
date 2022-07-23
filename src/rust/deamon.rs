@@ -1,15 +1,16 @@
 use clap::{Arg, App};
-// use std::env;
+
 use std::fs;
 use std::path::PathBuf;
 use std::process;
-// use std::thread;
+
 
 mod mqtt_client;
 use mqtt_client::MQTTClient;
 
-//use crossbeam_channel::{select, Sender};
-//use crossbeam_channel::{select};
+
+use tokio::signal;
+
 
 
 fn pyros_test_topic(msg: rumqttc::Publish, _mqtt_client: &MQTTClient) -> () {
@@ -17,9 +18,10 @@ fn pyros_test_topic(msg: rumqttc::Publish, _mqtt_client: &MQTTClient) -> () {
 }
 
 
-fn main() {
+#[tokio::main(flavor = "current_thread")]
+async fn main() {
 
-    let exec_name = std::env::current_exe(); //.unwrap().file_name().unwrap().to_str().unwrap();
+    let exec_name = std::env::current_exe();
 
     let argument_parser = App::new(exec_name.unwrap().file_name().unwrap().to_str().unwrap())
         .version("2.0.1")
@@ -34,6 +36,11 @@ fn main() {
                 .long("home-dir")
                 .takes_value(true)
                 .help("sets working directory"))
+        .arg(Arg::with_name("host")
+                .short("h")
+                .long("host-address")
+                .takes_value(true)
+                .help("mqtt host address"))
         .get_matches();
 
     let debug_level = argument_parser.occurrences_of("verbose");
@@ -45,48 +52,31 @@ fn main() {
             process::exit(1);
         }
     };
+    let host_address = argument_parser.value_of("host").unwrap_or("127.0.0.1");
 
     println!("Verbosity level set to {}", debug_level);
     println!("Home dir is {}", &home_dir.display());
+    println!("MQTT broker is {}", &host_address);
 
+//    let (shutdown_send, shutdown_recv) = mpsc::unbounded_channel();
 
-    let mut mqtt_client = MQTTClient::new("127.0.0.1");
-    let (stop_sender, _stop_receiver) = crossbeam_channel::bounded(1);
-//    let process_thread = thread::spawn(move || mqtt_client.process_notifications(stop_receiver));
-//
-    ctrlc::set_handler(move || {
-        let _ = stop_sender.send(true);
-    }).expect("Error setting Ctrl-C handler");
+    let mut mqtt_client = MQTTClient::new(host_address);
 
     println!("Running process notification thread, too...");
-    
-    
-    mqtt_client.subscribe("pyros-test", pyros_test_topic);
-    
-//    loop {
-//        select! {
-//            recv(mqtt_client.notifications) -> notification => {
-//                println!("Received {:?}", notification);
-//                match notification {
-//                    Ok(notification) => mqtt_client.process(notification),
-//                    _ => {}
-//                }
-//            }
-//            recv(stop_receiver) -> _done => break
-//        }
-//    }
-//
-//    let mut connection = mqtt_client.connection;
-//
-//    for (i, notification) in connection.iter().enumerate() {
-//        match notification {
-//            Ok(event) => mqtt_client.process(event),
-//            Err(e) => {
-//                println!("Error = {:?}", e);
-//            }
-//        }
-//    }
-//
 
-    mqtt_client.process_loop();
+    mqtt_client.subscribe("hello", pyros_test_topic).await;
+
+    loop {
+        tokio::select! {
+            event = mqtt_client.eventloop.poll() => match event {
+                Ok(event) => mqtt_client.process_event(event),
+                Err(e) => {
+                    println!("Error = {:?}", e);
+                }
+            },
+            _ = signal::ctrl_c() => break
+        }
+    }
+
+    println!("Broke out of loop - finishing...");
 }
