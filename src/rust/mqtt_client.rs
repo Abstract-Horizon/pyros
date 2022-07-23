@@ -3,6 +3,9 @@ use std::time::Duration;
 
 use rumqttc::{AsyncClient, EventLoop, MqttOptions, QoS, Event, Incoming};
 
+use rand::{thread_rng, Rng};
+use rand::distributions::Alphanumeric;
+
 
 pub struct MQTTClient {
     mqtt_client: AsyncClient,
@@ -12,11 +15,12 @@ pub struct MQTTClient {
 
 impl MQTTClient {
     pub fn new(address: &str) -> MQTTClient {
-        let mut mqttoptions = MqttOptions::new("rumqtt-sync", address, 1883);
+        let random_part = random_string(5);
+        let mut mqttoptions = MqttOptions::new("pyros_".to_owned() + &random_part, address, 1883);
         mqttoptions.set_keep_alive(Duration::from_secs(5));
 
         let (mqtt_client, eventloop) = AsyncClient::new(mqttoptions, 10);
-        println!("Connected to {}", address);
+        println!("Connected to {} as {}", address, "pyros_".to_owned() + &random_part);
 
         MQTTClient {
             mqtt_client,
@@ -60,3 +64,12 @@ impl MQTTClient {
         }
     }
 }
+
+fn random_string(n: usize) -> String {
+    thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(n)
+        .map(char::from)
+        .collect()
+}
+
