@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::time::Duration;
 
-use rumqttc::{AsyncClient, EventLoop, MqttOptions, QoS, Event, Incoming};
+use rumqttc::{AsyncClient, EventLoop, MqttOptions, QoS, Event, Incoming, ConnectionError};
 
 use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
@@ -9,7 +9,7 @@ use rand::distributions::Alphanumeric;
 
 pub struct MQTTClient {
     mqtt_client: AsyncClient,
-    pub eventloop: EventLoop,
+    eventloop: EventLoop,
     subscriptions: HashMap<&'static str, fn(msg: rumqttc::Publish, mqtt_client: &MQTTClient)>,
 }
 
@@ -57,11 +57,14 @@ impl MQTTClient {
                     _ => println!("Cannot find notification for topic {}", p.topic)
                 }
             },
-            Event::Incoming(i) => {
-                println!("Incoming = {:?}", i);
-            }
-            Event::Outgoing(o) => println!("Outgoing = {:?}", o),
+            // Event::Incoming(i) => println!("Incoming = {:?}", i),
+            // Event::Outgoing(o) => println!("Outgoing = {:?}", o),
+            _ => {}
         }
+    }
+
+    pub async fn poll(&mut self) -> Result<Event, ConnectionError> {
+        self.eventloop.poll().await
     }
 }
 

@@ -5,7 +5,7 @@
 cargo build --target arm-unknown-linux-musleabi
 ```
 
-or 
+or
 
 ```bash
 cargo build --target armv7-unknown-linux-musleabihf

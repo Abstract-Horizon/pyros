@@ -9,12 +9,11 @@ edition = "2018"
 name = "pyros-deamon"
 test = false
 bench = false
-path = "src/rust/deamon.rs"
+path = "src/bin/deamon.rs"
 
 
 [dependencies]
-
-clap = "2"
+clap =  { version = "3.2.15", features = ["derive"] }
 rand = "0.8.5"
 
 tokio = { version = "1", features = ["rt", "macros", "signal", "sync"] }
