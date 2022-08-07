@@ -12,9 +12,27 @@ bench = false
 path = "src/bin/deamon.rs"
 
 
+[[bin]]
+name = "content-genertor"
+test = true
+bench = false
+path = "src/bin/content_genertor.rs"
+
+
 [dependencies]
 clap =  { version = "3.2.15", features = ["derive"] }
 rand = "0.8.5"
 
-tokio = { version = "1", features = ["rt", "macros", "signal", "sync"] }
+futures = "0.3.21"
+#tokio = { version = "1", features = ["rt", "macros", "signal", "sync"] }
+#tokio = { version = "1.20.1", features = ["full"] }
+tokio = { version = "1.17.0", features = ["full"] }
+tokio-process = "0.2.5"
 rumqttc = "0.13.0"
+
+java-properties = "1.4.1"
+
+
+[dev-dependencies]
+# Enable test-utilities in dev mode only. This is mostly for tests.
+tokio = { version = "1", features = ["test-util"] }
