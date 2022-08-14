@@ -21,6 +21,7 @@ path = "src/bin/content_genertor.rs"
 
 [dependencies]
 clap =  { version = "3.2.15", features = ["derive"] }
+derivative = { version = "2.2.0" }
 rand = "0.8.5"
 
 futures = "0.3.21"
