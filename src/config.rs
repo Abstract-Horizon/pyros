@@ -35,7 +35,11 @@ pub struct PyrosCliArgs {
 
 pub struct Config {
     pub home_dir: PathBuf,
+    pub code_dir: PathBuf,
+    pub data_dir: PathBuf,
+    pub logs_dir: PathBuf,
     config_file: PathBuf,
+    pub cluster_id: Option<String>,
     pub verbosity: u8,
     pub mqtt_host: String,
     pub mqtt_port: u16,
@@ -63,7 +67,11 @@ impl Config {
 
         let mut config = Config {
             home_dir: home_dir.to_path_buf(),
+            code_dir: home_dir.join("code"),
+            data_dir: home_dir.join("data"),
+            logs_dir: home_dir.join("logs"),
             config_file,
+            cluster_id: None,
             verbosity: 0,
             mqtt_host: String::from("localhost"),
             mqtt_port: 1883,
@@ -89,6 +97,9 @@ impl Config {
 
         for (key, val) in config_map {
             match &key[..] {
+                "cluster_id" => {
+                    self.cluster_id = Some(val)
+                },
                 "debug_level" => {
                     let debug_level = val;
                     self.verbosity = debug_level.parse::<u8>()

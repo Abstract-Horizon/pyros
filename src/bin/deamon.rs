@@ -1,15 +1,10 @@
-// use clap::{Arg, App};
 use clap::Parser;
 
 use std::fs;
-use std::io::Error;
 use std::path::Path;
 use std::process;
-use std::process::{Stdio};
 
 use futures::stream::{FuturesUnordered, StreamExt};
-
-use tokio::{io::{BufReader, AsyncBufReadExt}, process::Command};
 
 use tokio::signal;
 
@@ -17,6 +12,7 @@ use rumqttc::ConnectionError;
 use pyros::config::{Config, PyrosCliArgs};
 
 use pyros::mqtt_client::MQTTClient;
+use pyros::pyros_process::PyrosProcess;
 
 
 fn pyros_test_topic(msg: rumqttc::Publish, _mqtt_client: &MQTTClient) -> () {
@@ -55,21 +51,23 @@ async fn main() {
     let mut process_stdout_comms_futures = FuturesUnordered::new();
 
     if let Some(command_to_run) = args_commnad {
-        let mut child = Command::new(command_to_run)
-            // .args(&args)
-            .stdout(Stdio::piped())
-            .spawn()
-            .unwrap();
-
-        let stdout = child.stdout.take().expect("child did not have a handle to stdout");
-
-        let mut stdout_reader = BufReader::new(stdout).lines();
-        process_stdout_comms_futures.push(async move {
-            while let Some(line) = stdout_reader.next_line().await? {
-                println!("Stderr line: {}", line);
-            }
-            Ok::<&str, Error>("Finished")
-        })
+        // let mut child = Command::new(command_to_run)
+        //     // .args(&args)
+        //     .stdout(Stdio::piped())
+        //     .spawn()
+        //     .unwrap();
+        //
+        // let stdout = child.stdout.take().expect("child did not have a handle to stdout");
+        //
+        // let mut stdout_reader = BufReader::new(stdout).lines();
+        // process_stdout_comms_futures.push(Either::Right(async move {
+        //     while let Some(line) = stdout_reader.next_line().await? {
+        //         println!("Stderr line: {}", line);
+        //     }
+        //     // Ok::<&str, Error>("Finished")
+        //     Ok::<(), Error>(())
+        // }));
+        PyrosProcess::new(command_to_run.as_str(), &process_stdout_comms_futures);
     }
 
     loop {
